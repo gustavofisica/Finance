@@ -53,12 +53,12 @@ class ReportsView(QWidget):
     
     def getIncomeExpenses(self, selected_year):
         query = """
-            SELECT type, strftime('%m', date) AS month, SUM(value) 
+            SELECT type, strftime('%m', date) AS month, SUM(value)
             FROM transactions
-            WHERE strftime('%Y', date) = ?
+            WHERE user_id = ? AND strftime('%Y', date) = ?
             GROUP BY type, month;
         """
-        rows = FINANCE_DB.fetch_query(query, (selected_year,))
+        rows = FINANCE_DB.fetch_query(query, (FINANCE_DB.user_id, selected_year))
         income = {f"{i:02d}": 0.0 for i in range(1, 13)}
         expenses = {f"{i:02d}": 0.0 for i in range(1, 13)}
         for t, month, value in rows:
@@ -70,14 +70,14 @@ class ReportsView(QWidget):
 
     def getInvestments(self, selected_year):
         query = """
-            SELECT strftime('%m', date) AS month, 
-                SUM(invested_value), 
+            SELECT strftime('%m', date) AS month,
+                SUM(invested_value),
                 SUM(current_value - invested_value) / COUNT(*)
             FROM investments
-            WHERE strftime('%Y', date) = ?
+            WHERE user_id = ? AND strftime('%Y', date) = ?
             GROUP BY month;
         """
-        rows = FINANCE_DB.fetch_query(query, (selected_year,))
+        rows = FINANCE_DB.fetch_query(query, (FINANCE_DB.user_id, selected_year))
         investments = {f"{i:02d}": 0.0 for i in range(1, 13)}
         returns = {f"{i:02d}": 0.0 for i in range(1, 13)}
         profitability = {f"{i:02d}": 0.0 for i in range(1, 13)}
@@ -97,24 +97,27 @@ class ReportsView(QWidget):
         prev_year = str(int(selected_year) - 1)
         # Dados de transações para dezembro do ano anterior
         query_trans = """
-            SELECT 
+            SELECT
                 SUM(CASE WHEN type = 'Receitas' THEN value ELSE 0 END) AS total_income,
                 SUM(CASE WHEN type = 'Despesas' THEN value ELSE 0 END) AS total_expense
             FROM transactions
-            WHERE strftime('%Y', date) = ? AND strftime('%m', date) = '12'
+            WHERE user_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = '12'
         """
-        row = FINANCE_DB.fetch_query(query_trans, (prev_year,))
+        row = FINANCE_DB.fetch_query(
+            query_trans,
+            (FINANCE_DB.user_id, prev_year),
+        )
         prev_income = row[0][0] if row and row[0][0] else 0
         prev_expense = row[0][1] if row and row[0][1] else 0
         prev_net_cash = prev_income - abs(prev_expense)
         
         # Dados de investimentos para dezembro do ano anterior
         query_inv = """
-            SELECT SUM(current_value) 
+            SELECT SUM(current_value)
             FROM investments
-            WHERE strftime('%Y', date) = ? AND strftime('%m', date) = '12'
+            WHERE user_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = '12'
         """
-        row = FINANCE_DB.fetch_query(query_inv, (prev_year,))
+        row = FINANCE_DB.fetch_query(query_inv, (FINANCE_DB.user_id, prev_year))
         prev_invest_balance = row[0][0] if row and row[0][0] else 0
         
         return prev_net_cash, prev_invest_balance

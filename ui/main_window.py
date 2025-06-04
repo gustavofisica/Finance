@@ -113,11 +113,11 @@ class FinancePanel(QWidget):
             query = """
                 SELECT category, subcategory, strftime('%m', date) AS month, SUM(value) AS total
                 FROM transactions
-                WHERE type = ? AND strftime('%Y', date) = ?
+                WHERE type = ? AND user_id = ? AND strftime('%Y', date) = ?
                 GROUP BY category, subcategory, month
                 ORDER BY category, subcategory, month;
             """
-            rows = FINANCE_DB.fetch_query(query, (dbType, selected_year))
+            rows = FINANCE_DB.fetch_query(query, (dbType, FINANCE_DB.user_id, selected_year))
             
             # Organiza os resultados em um dicionário (pivot) para facilitar o preenchimento da tabela
             pivot = {}
