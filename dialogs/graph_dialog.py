@@ -38,11 +38,16 @@ class InvestmentGraphDialog(QDialog):
         display a bar chart of 'asset' vs. 'current_value'.
         """
         # Use FINANCE_DB to fetch the data instead of creating a new connection.
-        rows = FINANCE_DB.fetch_query("""
-            SELECT asset, current_value
-            FROM investments
-            ORDER BY asset
-        """)
+        rows = FINANCE_DB.fetch_query(
+            """
+            SELECT a.name, i.current_value
+            FROM investments i
+            JOIN assets a ON i.asset_id = a.id
+            WHERE i.user_id = ?
+            ORDER BY a.name
+            """,
+            (FINANCE_DB.user_id,),
+        )
 
         # Separate data into lists
         assets = [row[0] for row in rows]

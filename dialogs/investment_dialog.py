@@ -102,29 +102,38 @@ class InsertInvestmentDialog(QDialog):
             group_id = FINANCE_DB._get_or_create("groups", "name", group)
 
             # Verifica se já existe um aporte no mesmo mês para esta combinação
-            existing = FINANCE_DB.fetch_query("""
-                SELECT id, invested_value, current_value 
-                FROM investments 
-                WHERE asset_id = ? AND type_id = ? AND group_id = ? 
-                      AND strftime('%Y-%m', date) = strftime('%Y-%m', ?)
-            """, (asset_id, type_id, group_id, date))
+            existing = FINANCE_DB.fetch_query(
+                """
+                SELECT id, invested_value, current_value
+                FROM investments
+                WHERE asset_id = ? AND type_id = ? AND group_id = ?
+                      AND user_id = ? AND strftime('%Y-%m', date) = strftime('%Y-%m', ?)
+                """,
+                (asset_id, type_id, group_id, FINANCE_DB.user_id, date),
+            )
 
             if existing:
                 # Se já existe, soma os valores
                 investment_id, current_invested_value, current_balance = existing[0]
                 new_invested_value = current_invested_value + invested_value
                 new_balance = current_balance + invested_value
-                FINANCE_DB.execute_query("""
-                    UPDATE investments 
+                FINANCE_DB.execute_query(
+                    """
+                    UPDATE investments
                     SET invested_value = ?, current_value = ?
-                    WHERE id = ?
-                """, (new_invested_value, new_balance, investment_id))
+                    WHERE id = ? AND user_id = ?
+                    """,
+                    (new_invested_value, new_balance, investment_id, FINANCE_DB.user_id),
+                )
             else:
                 # Insere um novo registro
-                FINANCE_DB.execute_query("""
-                    INSERT INTO investments (asset_id, type_id, group_id, date, invested_value, current_value)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (asset_id, type_id, group_id, date, invested_value, invested_value))
+                FINANCE_DB.execute_query(
+                    """
+                    INSERT INTO investments (asset_id, type_id, group_id, date, invested_value, current_value, user_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (asset_id, type_id, group_id, date, invested_value, invested_value, FINANCE_DB.user_id),
+                )
 
             self.accept()
         except Exception as e:
@@ -200,12 +209,15 @@ class EditInvestmentDialog(QDialog):
             return
         asset_id = asset_id_query[0][0]
 
-        rows = FINANCE_DB.fetch_query("""
-            SELECT id, date, invested_value, current_value 
+        rows = FINANCE_DB.fetch_query(
+            """
+            SELECT id, date, invested_value, current_value
             FROM investments
-            WHERE asset_id = ? AND strftime('%Y-%m', date) = ?
+            WHERE asset_id = ? AND user_id = ? AND strftime('%Y-%m', date) = ?
             ORDER BY date ASC
-        """, (asset_id, period))
+            """,
+            (asset_id, FINANCE_DB.user_id, period),
+        )
 
         if not rows:
             QMessageBox.information(self, "Info", "Nenhum aporte encontrado para esse ativo no período selecionado.")
@@ -238,11 +250,14 @@ class EditInvestmentDialog(QDialog):
                 QMessageBox.warning(self, "Erro", "Valores inválidos! Insira números positivos.")
                 return
 
-            FINANCE_DB.execute_query("""
+            FINANCE_DB.execute_query(
+                """
                 UPDATE investments
                 SET invested_value = ?, current_value = ?
-                WHERE id = ?
-            """, (new_invested, new_balance, inv_id))
+                WHERE id = ? AND user_id = ?
+                """,
+                (new_invested, new_balance, inv_id, FINANCE_DB.user_id),
+            )
             updated += 1
 
         QMessageBox.information(self, "Sucesso", f"{updated} aportes atualizados com sucesso!")
@@ -265,8 +280,14 @@ class EditInvestmentDialog(QDialog):
         )
         if confirmation == QMessageBox.Yes:
             # Exclui registros no histórico primeiro
-            FINANCE_DB.execute_query("DELETE FROM investment_history WHERE investment_id = ?", (inv_id,))
+            FINANCE_DB.execute_query(
+                "DELETE FROM investment_history WHERE investment_id = ?",
+                (inv_id,),
+            )
             # Exclui o investimento principal
-            FINANCE_DB.execute_query("DELETE FROM investments WHERE id = ?", (inv_id,))
+            FINANCE_DB.execute_query(
+                "DELETE FROM investments WHERE id = ? AND user_id = ?",
+                (inv_id, FINANCE_DB.user_id),
+            )
             self.table.removeRow(selected_row)
             QMessageBox.information(self, "Sucesso", "Aporte excluído com sucesso.")

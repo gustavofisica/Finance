@@ -74,11 +74,13 @@ class InvestmentsView(QWidget):
                 JOIN assets a ON i.asset_id = a.id
                 JOIN investment_types it ON i.type_id = it.id
                 JOIN groups g ON i.group_id = g.id
-                WHERE strftime('%Y', i.date) = ?
+                WHERE i.user_id = ? AND strftime('%Y', i.date) = ?
                 GROUP BY asset, type, "group", month
                 ORDER BY asset, month;
             """
-            rows_current = FINANCE_DB.fetch_query(query_current, (str(current_year),))
+            rows_current = FINANCE_DB.fetch_query(
+                query_current, (FINANCE_DB.user_id, str(current_year))
+            )
             if not rows_current:
                 logging.info("Nenhum investimento encontrado para o ano atual.")
                 return
@@ -94,10 +96,12 @@ class InvestmentsView(QWidget):
                 JOIN assets a ON i.asset_id = a.id
                 JOIN investment_types it ON i.type_id = it.id
                 JOIN groups g ON i.group_id = g.id
-                WHERE strftime('%Y', i.date) = ?
+                WHERE i.user_id = ? AND strftime('%Y', i.date) = ?
                 GROUP BY asset, type, "group";
             """
-            rows_previous = FINANCE_DB.fetch_query(query_previous, (str(previous_year),))
+            rows_previous = FINANCE_DB.fetch_query(
+                query_previous, (FINANCE_DB.user_id, str(previous_year))
+            )
             prev_balance_data = {}
             for row in rows_previous:
                 key = (row[0], row[1], row[2])

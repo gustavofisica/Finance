@@ -161,10 +161,10 @@ class AddTransactionDialog(QDialog):
 
         FINANCE_DB.execute_query(
             """
-            INSERT INTO transactions (type, date, category, subcategory, value, rank)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO transactions (type, date, category, subcategory, value, rank, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (dbType, dateString, category, subcategory, valueBrl, rank)
+            (dbType, dateString, category, subcategory, valueBrl, rank, FINANCE_DB.user_id)
         )
 
         self.transactionUpdated.emit()  # 🔔 Emite sinal de atualização
@@ -219,12 +219,15 @@ class EditTransactionDialog(QDialog):
 
         dbType = "Receitas" if self.transactionType == "Income" else "Despesas"
         query = """
-            SELECT id, date, category, subcategory, value 
+            SELECT id, date, category, subcategory, value
             FROM transactions
-            WHERE type = ? AND strftime('%m', date) = ? AND strftime('%Y', date) = ?
+            WHERE type = ? AND user_id = ? AND strftime('%m', date) = ? AND strftime('%Y', date) = ?
             ORDER BY date ASC
         """
-        rows = FINANCE_DB.fetch_query(query, (dbType, self.selectedMonth, self.selectedYear))
+        rows = FINANCE_DB.fetch_query(
+            query,
+            (dbType, FINANCE_DB.user_id, self.selectedMonth, self.selectedYear),
+        )
 
         self.table.setRowCount(len(rows))
 
@@ -252,9 +255,9 @@ class EditTransactionDialog(QDialog):
                 """
                 UPDATE transactions
                 SET date = ?, category = ?, subcategory = ?, value = ?
-                WHERE id = ?
+                WHERE id = ? AND user_id = ?
                 """,
-                (date, category, subcategory, value, transaction_id)
+                (date, category, subcategory, value, transaction_id, FINANCE_DB.user_id)
             )
 
         logging.info("Alterações salvas com sucesso.")
@@ -279,6 +282,9 @@ class EditTransactionDialog(QDialog):
         )
 
         if confirmation == QMessageBox.Yes:
-            FINANCE_DB.execute_query("DELETE FROM transactions WHERE id = ?", (transaction_id,))
+            FINANCE_DB.execute_query(
+                "DELETE FROM transactions WHERE id = ? AND user_id = ?",
+                (transaction_id, FINANCE_DB.user_id),
+            )
             logging.info(f"Transação {transaction_id} excluída com sucesso.")
             self.table.removeRow(selected_row) 
