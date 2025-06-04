@@ -1,0 +1,15 @@
+/* Global application stylesheet */
+QWidget {
+    font-family: Arial;
+    font-size: 14px;
+}
+
+QFrame {
+    background-color: white;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+#headerFrame {
+    background-color: #f0f0f0;
+}

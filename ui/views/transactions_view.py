@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QTableWidget, QPushButton, QTableWidgetItem, QHeaderView, QHBoxLayout
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtCore import Qt, QTimer
 import calendar
 import logging
@@ -27,6 +27,7 @@ class TransactionsView(QWidget):
         self.table = QTableWidget()
         layout.addWidget(self.table)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.setSortingEnabled(True)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)  # Permitir seleção de linha inteira
         self.table.setSelectionMode(QTableWidget.SingleSelection)  # Seleção única
         
@@ -144,7 +145,27 @@ class TransactionsView(QWidget):
                 value = month_totals.get(month, 0.0)
                 item = QTableWidgetItem(f"{value:.2f}")
                 item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                if value < 0:
+                    item.setForeground(QColor("red"))
                 self.table.setItem(rowIndex, 2 + j, item)
+
+        # Totals row
+        totals = {f"{i:02d}": 0.0 for i in range(1, 13)}
+        for month_totals in pivot.values():
+            for m, v in month_totals.items():
+                totals[m] += v
+
+        total_row = self.table.rowCount()
+        self.table.setRowCount(total_row + 1)
+        self.table.setItem(total_row, 0, QTableWidgetItem("Total"))
+        self.table.setItem(total_row, 1, QTableWidgetItem(""))
+        for j, month in enumerate([f"{i:02d}" for i in range(1, 13)]):
+            value = totals.get(month, 0.0)
+            item = QTableWidgetItem(f"{value:.2f}")
+            item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            if value < 0:
+                item.setForeground(QColor("red"))
+            self.table.setItem(total_row, 2 + j, item)
 
         # Ajusta automaticamente a largura das colunas de Categoria e Subcategoria
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
