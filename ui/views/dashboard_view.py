@@ -72,10 +72,17 @@ class DashboardView(QWidget):
 
         title = QLabel("Resumo Financeiro")
         title.setFont(QFont("Arial", 16, QFont.Bold))
-        description = QLabel("Visão geral de receitas, despesas e saldo")
-        
+
+        self.incomeLabel = QLabel("Receitas do Mês: 0.00")
+        self.expenseLabel = QLabel("Despesas do Mês: 0.00")
+        self.investReturnLabel = QLabel("Renda de Investimentos: 0.00")
+        self.independenceLabel = QLabel("Independência Financeira: 0.00%")
+
         summaryLayout.addWidget(title)
-        summaryLayout.addWidget(description)
+        summaryLayout.addWidget(self.incomeLabel)
+        summaryLayout.addWidget(self.expenseLabel)
+        summaryLayout.addWidget(self.investReturnLabel)
+        summaryLayout.addWidget(self.independenceLabel)
         self.layout.addWidget(summaryFrame)
 
     def createTransactionsArea(self):
@@ -128,8 +135,58 @@ class DashboardView(QWidget):
         self.loadGoalsData()
 
     def loadSummaryData(self):
-        # Load summary financial data
-        pass
+        """Populate the summary labels with current month data."""
+        try:
+            current_month = datetime.now().strftime("%m")
+            current_year = datetime.now().strftime("%Y")
+
+            income_row = FINANCE_DB.fetch_query(
+                """
+                SELECT SUM(value) FROM transactions
+                WHERE type = 'Receitas'
+                  AND strftime('%Y', date) = ?
+                  AND strftime('%m', date) = ?
+                """,
+                (current_year, current_month),
+            )
+            income = income_row[0][0] if income_row and income_row[0][0] else 0.0
+
+            expense_row = FINANCE_DB.fetch_query(
+                """
+                SELECT SUM(value) FROM transactions
+                WHERE type = 'Despesas'
+                  AND strftime('%Y', date) = ?
+                  AND strftime('%m', date) = ?
+                """,
+                (current_year, current_month),
+            )
+            expense = expense_row[0][0] if expense_row and expense_row[0][0] else 0.0
+
+            invest_row = FINANCE_DB.fetch_query(
+                """
+                SELECT SUM(current_value - invested_value)
+                FROM investments
+                WHERE strftime('%Y', date) = ?
+                  AND strftime('%m', date) = ?
+                """,
+                (current_year, current_month),
+            )
+            invest_income = invest_row[0][0] if invest_row and invest_row[0][0] else 0.0
+
+            independence = (
+                (invest_income / abs(expense)) * 100 if abs(expense) > 0 else 0.0
+            )
+
+            self.incomeLabel.setText(f"Receitas do Mês: {income:.2f}")
+            self.expenseLabel.setText(f"Despesas do Mês: {abs(expense):.2f}")
+            self.investReturnLabel.setText(
+                f"Renda de Investimentos: {invest_income:.2f}"
+            )
+            self.independenceLabel.setText(
+                f"Independência Financeira: {independence:.2f}%"
+            )
+        except Exception as exc:
+            logging.error("Erro ao carregar resumo financeiro: %s", exc)
 
     def loadTransactionsData(self):
         # Load transactions data
