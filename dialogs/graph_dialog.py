@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from database import FINANCE_DB
+from finance.database import FINANCE_DB
 
 class InvestmentGraphDialog(QDialog):
     """

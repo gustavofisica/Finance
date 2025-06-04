@@ -1,8 +1,10 @@
 import logging
 
 from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QStackedWidget, QSplitter, QListWidget, QTableWidgetItem
+    QWidget, QHBoxLayout, QStackedWidget, QSplitter, QListWidget,
+    QTableWidgetItem, QListWidgetItem
 )
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 
 # Importa as views separadas
@@ -52,10 +54,19 @@ class FinancePanel(QWidget):
             UI_LABEL_EXPENSE,
             UI_LABEL_INVESTMENTS,
             UI_LABEL_REPORTS,
-            UI_LABEL_SETTINGS
+            UI_LABEL_SETTINGS,
         ]
+        icon_map = {
+            UI_LABEL_DASHBOARD: "assets/icons/icon.png",
+            UI_LABEL_INCOME: "assets/icons/income.png",
+            UI_LABEL_EXPENSE: "assets/icons/expense.png",
+            UI_LABEL_INVESTMENTS: "assets/icons/icon.png",
+            UI_LABEL_REPORTS: "assets/icons/icon.png",
+            UI_LABEL_SETTINGS: "assets/icons/icon.png",
+        }
         for item in items:
-            self.sideBar.addItem(item)
+            list_item = QListWidgetItem(QIcon(icon_map.get(item, "assets/icons/icon.png")), item)
+            self.sideBar.addItem(list_item)
         self.sideBar.itemClicked.connect(self.changeView)
         splitter.addWidget(self.sideBar)
 

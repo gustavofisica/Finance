@@ -41,7 +41,7 @@ class DashboardView(QWidget):
 
     def createHeaderArea(self):
         headerFrame = QFrame()
-        headerFrame.setStyleSheet("QFrame { background-color: #f0f0f0; border-radius: 10px; padding: 15px; }")
+        headerFrame.setObjectName("headerFrame")
         headerLayout = QVBoxLayout(headerFrame)
 
         title = QLabel("Dashboard Financeiro")
@@ -54,7 +54,6 @@ class DashboardView(QWidget):
 
     def createFiltersArea(self):
         filterFrame = QFrame()
-        filterFrame.setStyleSheet("QFrame { background-color: white; border-radius: 10px; padding: 15px; }")
         filterLayout = QVBoxLayout(filterFrame)
 
         title = QLabel("Filtros e Controles")
@@ -67,7 +66,6 @@ class DashboardView(QWidget):
 
     def createSummaryArea(self):
         summaryFrame = QFrame()
-        summaryFrame.setStyleSheet("QFrame { background-color: white; border-radius: 10px; padding: 15px; }")
         summaryLayout = QVBoxLayout(summaryFrame)
 
         title = QLabel("Resumo Financeiro")
@@ -87,7 +85,6 @@ class DashboardView(QWidget):
 
     def createTransactionsArea(self):
         transactionsFrame = QFrame()
-        transactionsFrame.setStyleSheet("QFrame { background-color: white; border-radius: 10px; padding: 15px; }")
         transactionsLayout = QVBoxLayout(transactionsFrame)
 
         title = QLabel("Movimentações")
@@ -100,7 +97,6 @@ class DashboardView(QWidget):
 
     def createInvestmentsArea(self):
         investmentsFrame = QFrame()
-        investmentsFrame.setStyleSheet("QFrame { background-color: white; border-radius: 10px; padding: 15px; }")
         investmentsLayout = QVBoxLayout(investmentsFrame)
 
         title = QLabel("Investimentos")
@@ -113,7 +109,6 @@ class DashboardView(QWidget):
 
     def createGoalsArea(self):
         goalsFrame = QFrame()
-        goalsFrame.setStyleSheet("QFrame { background-color: white; border-radius: 10px; padding: 15px; }")
         goalsLayout = QVBoxLayout(goalsFrame)
 
         title = QLabel("Metas Financeiras")
